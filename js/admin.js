@@ -18,11 +18,18 @@ $(document).ready(function(){
         viewProducts()
     })
 
+    $('#accounts-link').on('click', function(e) {
+        e.preventDefault()
+        viewAccounts()
+    })
+
     let url = window.location.href;
     if (url.endsWith('dashboard')){
         $('#dashboard-link').trigger('click')
     }else if (url.endsWith('products')){
         $('#products-link').trigger('click')
+    }else if (url.endsWith('accounts')) {
+        $('#accounts-link').trigger('click')
     }else{
         $('#dashboard-link').trigger('click')
     }
@@ -102,6 +109,32 @@ $(document).ready(function(){
         })
     }
 
+    function viewAccounts() {
+        $.ajax({
+            url: '../accounts/view-accounts.php',
+            dataType: 'html',
+            success: function(response){
+                $('.content-page').html(response)
+
+                var table = $('#table-products').DataTable({
+                    dom: 'rtp',
+                    pageLength: 10,
+                    ordering: false,
+                });
+
+                // Bind custom input to DataTable search
+                $('#custom-search').on('keyup', function() {
+                    table.search(this.value).draw()
+                });
+
+                $('#add-account').on('click', function(e){
+                    e.preventDefault()
+                    addAccount()
+                })
+            }
+        })
+    }
+
     function addProduct(){
         $.ajax({
             type: 'GET',
@@ -116,6 +149,23 @@ $(document).ready(function(){
                 $('#form-add-product').on('submit', function(e){
                     e.preventDefault()
                     saveProduct()
+                })
+            }
+        })
+    }
+
+    function addAccount() {
+        $.ajax({
+            type: 'GET',
+            url: '../accounts/add-account.html',
+            dataType: 'html',
+            success: function(view){
+                $('.modal-container').html(view)
+                $('#staticBackdrop').modal('show')
+
+                $('#form-add-account').on('submit', function(e){
+                    e.preventDefault()
+                    saveAccount()
                 })
             }
         })
@@ -163,7 +213,56 @@ $(document).ready(function(){
                 }
             }
         });
-        
+    }
+
+    function saveAccount() {
+        $.ajax({
+            type: 'POST',
+            url: '../accounts/add-account.php',  // Make sure this points to your PHP handler
+            data: $('#form-add-account').serialize(),         // Serialize the form data
+            dataType: 'json',                    // Expect a JSON response
+            success: function(response) {
+                if (response.status === 'error') {
+                    // Display validation errors for each field
+                    if (response.firstNameErr) {
+                        $('#first-name').addClass('is-invalid');
+                        $('#first-name').next('.invalid-feedback').text(response.firstNameErr).show();
+                    }else{
+                        $('#first-name').removeClass('is-invalid');
+                    }
+                    if (response.lastNameErr) {
+                        $('#last-name').addClass('is-invalid');
+                        $('#last-name').next('.invalid-feedback').text(response.lastNameErr).show();
+                    }else{
+                        $('#last-name').removeClass('is-invalid');
+                    }
+                    if (response.usernameErr) {
+                        $('#username').addClass('is-invalid');
+                        $('#username').next('.invalid-feedback').text(response.usernameErr).show();
+                    }else{
+                        $('#username').removeClass('is-invalid');
+                    }
+                    if (response.passwordErr) {
+                        $('#password').addClass('is-invalid');
+                        $('#password').next('.invalid-feedback').text(response.passwordErr).show();
+                    }else{
+                        $('#password').removeClass('is-invalid');
+                    }
+                    if (response.roleErr) {
+                        $('#role').addClass('is-invalid');
+                        $('#role').next('.invalid-feedback').text(response.roleErr).show();
+                    }else{
+                        $('#role').removeClass('is-invalid');
+                    }
+                } else if (response.status === 'success') {
+                    // Hide the modal and reset the form on success
+                    $('#staticBackdrop').modal('hide');
+                    $('#form-add-account')[0].reset();  // Reset the form
+                    // Optionally, redirect to the product listing page or display a success message
+                    viewAccounts()
+                }
+            }
+        });
     }
 
     function fetchCategories(){

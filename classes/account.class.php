@@ -88,6 +88,18 @@ class Account
         return $data;
     }
 
+    function getById($id)
+    {
+        $sql = 'SELECT * FROM account WHERE id = :id';
+        $query = $this->db->connect()->prepare($sql);
+        $query->bindParam(':id', $id);
+        $data = null;
+        if ($query->execute()) {
+            $data = $query->fetch();
+        }
+        return $data;
+    }
+
     function showAll()
     {
         $sql = 'SELECT * FROM account ORDER BY first_name, last_name';
@@ -99,6 +111,38 @@ class Account
         }
 
         return $data;
+    }
+
+    function update()
+    {
+        $sql = 'UPDATE account SET first_name=:first_name, last_name=:last_name, username=:username, role=:role, is_staff=:is_staff, is_admin=:is_admin'
+            . ($this->password ? ', password=:password' : '')
+            . ' WHERE id=:id';
+        $query = $this->db->connect()->prepare($sql);
+
+        $query->bindParam(':id', $this->id);
+        $query->bindParam(':first_name', $this->first_name);
+        $query->bindParam(':last_name', $this->last_name);
+        $query->bindParam(':username', $this->username);
+
+        if ($this->password) {
+            $hashpassword = password_hash($this->password, PASSWORD_DEFAULT);
+            $query->bindParam(':password', $hashpassword);
+        }
+        $query->bindParam(':role', $this->role);
+        $query->bindParam(':is_staff', $this->is_staff);
+        $query->bindParam(':is_admin', $this->is_admin);
+
+        return $query->execute();
+    }
+
+    function delete()
+    {
+        $sql = 'DELETE FROM account WHERE id=:id';
+        $query = $this->db->connect()->prepare($sql);
+        $query->bindParam(':id', $this->id);
+
+        return $query->execute();
     }
 }
 

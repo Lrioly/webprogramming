@@ -131,6 +131,14 @@ $(document).ready(function(){
                     e.preventDefault()
                     addAccount()
                 })
+
+                $('.edit-account-btn').on('click', function(e) {
+                    editAccount($(e.target).data('id'))
+                })
+
+                $('.delete-account-btn').on('click', function(e) {
+                    deleteAccount($(e.target).data('id'))
+                })
             }
         })
     }
@@ -166,6 +174,23 @@ $(document).ready(function(){
                 $('#form-add-account').on('submit', function(e){
                     e.preventDefault()
                     saveAccount()
+                })
+            }
+        })
+    }
+
+    function editAccount(id) {
+        $.ajax({
+            type: 'GET',
+            url: '../accounts/edit-account.php?id=' + id,
+            dataType: 'html',
+            success: function(view){
+                $('.modal-container').html(view)
+                $('#staticBackdrop').modal('show')
+
+                $('#form-edit-account').on('submit', function(e){
+                    e.preventDefault()
+                    updateAccount(id)
                 })
             }
         })
@@ -263,6 +288,62 @@ $(document).ready(function(){
                 }
             }
         });
+    }
+
+    function updateAccount(id) {
+        $.ajax({
+            type: 'POST',
+            url: '../accounts/edit-account.php?id=' + id,  // Make sure this points to your PHP handler
+            data: $('#form-edit-account').serialize(),         // Serialize the form data
+            dataType: 'json',                    // Expect a JSON response
+            success: function(response) {
+                if (response.status === 'error') {
+                    // Display validation errors for each field
+                    if (response.firstNameErr) {
+                        $('#first-name').addClass('is-invalid');
+                        $('#first-name').next('.invalid-feedback').text(response.firstNameErr).show();
+                    }else{
+                        $('#first-name').removeClass('is-invalid');
+                    }
+                    if (response.lastNameErr) {
+                        $('#last-name').addClass('is-invalid');
+                        $('#last-name').next('.invalid-feedback').text(response.lastNameErr).show();
+                    }else{
+                        $('#last-name').removeClass('is-invalid');
+                    }
+                    if (response.usernameErr) {
+                        $('#username').addClass('is-invalid');
+                        $('#username').next('.invalid-feedback').text(response.usernameErr).show();
+                    }else{
+                        $('#username').removeClass('is-invalid');
+                    }
+                    if (response.roleErr) {
+                        $('#role').addClass('is-invalid');
+                        $('#role').next('.invalid-feedback').text(response.roleErr).show();
+                    }else{
+                        $('#role').removeClass('is-invalid');
+                    }
+                } else if (response.status === 'success') {
+                    // Hide the modal and reset the form on success
+                    $('#staticBackdrop').modal('hide');
+                    $('#form-edit-account')[0].reset();  // Reset the form
+                    // Optionally, redirect to the product listing page or display a success message
+                    viewAccounts()
+                }
+            }
+        });
+    }
+
+    function deleteAccount(id) {
+        $.ajax({
+            url: '../accounts/delete-account.php?id=' + id,
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    viewAccounts();
+                }
+            }
+        })
     }
 
     function fetchCategories(){

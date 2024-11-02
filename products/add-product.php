@@ -8,6 +8,7 @@ $codeErr = $nameErr = $categoryErr = $priceErr = $imageErr = '';
 
 $uploadDir = '../uploads/';
 $allowedType = ['jpg', 'jpeg', 'png'];
+$maxFileSize = 5000000;
 
 $productObj = new ProductImage();
 
@@ -47,6 +48,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         $imageErr = 'Product image is required.';
     }else if(!in_array($imageFileType, $allowedType)){
         $imageErr = 'Accepted files are jpg, jpeg, and png only.';
+    } else if (filesize($imageTemp) > $maxFileSize){
+        $imageErr = 'File size must not exceed 5MB.';
     }
 
     // If there are validation errors, return them as JSON
